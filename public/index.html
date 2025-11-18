@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndicate+ - Intelligent Syndicate Building Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="#home" class="logo-link">
+                    <img src="SynicatePlus Logo.png" alt="Syndicate+" class="logo">
+                </a>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="#learn-more" class="nav-link">Learn More</a>
+                <a href="#dashboard" class="nav-link" id="dashboardLink" style="display:none;">Dashboard</a>
+                <button class="btn btn-outline" id="loginBtn">Login</button>
+                <button class="btn btn-primary" id="signupBtn">Sign Up</button>
+                <button class="btn btn-outline" id="logoutBtn" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-video-background">
+            <video autoplay loop muted playsinline>
+                <source src="AI Planet video.mov" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <h1 class="hero-title">Build the Right Syndicate for your Transaction</h1>
+                <p class="hero-subtitle">The intelligent platform connecting boutique corporate finance firms to maximise deal completion success</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-lg" id="heroSignupBtn">Get Started</button>
+                    <button class="btn btn-outline btn-lg" id="learnMoreBtn">Learn More</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Powerful Features for Syndicate Building</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Member Network</h3>
+                    <p>Join an exclusive network of boutique corporate finance firms with detailed investor base profiles</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Secure Deal-Locker</h3>
+                    <p>Create confidential deal rooms with controlled access and integrated eNDA management</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>AI-Powered Matching</h3>
+                    <p>Intelligent algorithm matches your deal with the most suitable syndicate partners</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>Invitation System</h3>
+                    <p>Send personalized invitations and manage responses seamlessly within the platform</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Deal Analytics</h3>
+                    <p>Track syndicate performance and measure deal completion success rates</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <h3>eNDA Workflow</h3>
+                    <p>Streamlined electronic NDA signing before granting deal-locker access</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Register Your Firm</h3>
+                    <p>Create your profile with details about your investor base, sector focus, and deal preferences</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Create a Deal-Locker</h3>
+                    <p>Upload transaction details and specify your syndicate requirements</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Get AI Recommendations</h3>
+                    <p>Our algorithm analyzes the database and suggests the ideal syndicate partners</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Build Your Syndicate</h3>
+                    <p>Send invitations to selected firms and manage responses</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <h3>Complete the Deal</h3>
+                    <p>Accepted members sign eNDAs and gain access to your deal-locker</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login to Syndicate+</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <p class="modal-footer">Don't have an account? <a href="#" id="switchToSignup">Sign up</a></p>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Register Your Firm</h2>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label>Firm Name</label>
+                    <input type="text" id="signupFirmName" required>
+                </div>
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" id="signupContactPerson" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+            </form>
+            <p class="modal-footer">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
+        </div>
+    </div>
+
+    <!-- Learn More Section -->
+    <section id="learn-more" class="learn-more-section">
+        <div class="container">
+            <h2 class="section-title">The Future of Private Capital Markets</h2>
+
+            <div class="learn-more-content">
+                <section class="content-section">
+                    <h3>The Challenge in European Private Markets</h3>
+                    <p>European private capital markets face significant structural challenges that hinder efficient capital formation. Fragmentation across borders, regulatory complexity, and information asymmetries create friction that prevents capital from flowing to where it's needed most.</p>
+                    <p>Boutique corporate finance firms and capital introduction specialists operate in isolation, each with their own limited investor networks. This fragmentation means that promising transactions often struggle to find the right investors, while qualified investors miss opportunities that would be perfect for their portfolios.</p>
+                </section>
+
+                <section class="content-section">
+                    <h3>The Irreplaceable Human Element</h3>
+                    <p>While technology and algorithms can process data at scale, capital raising remains fundamentally a relationship-driven business. The nuances of transaction structuring, investor psychology, and deal dynamics require human judgment and expertise that no algorithm can replace.</p>
+                    <p>Successful syndication depends on understanding not just the numbers, but the people behind them—their investment criteria, risk appetite, sectoral preferences, and strategic objectives. This requires the deep institutional knowledge and relationship capital that experienced professionals have built over years.</p>
+                    <p>Syndicate+ doesn't replace this human expertise—it amplifies it by connecting professionals who can bring complementary strengths to each transaction.</p>
+                </section>
+
+                <section class="content-section">
+                    <h3>Strength Through Collaboration</h3>
+                    <p>Individual boutique firms face inherent limitations. Each has a finite investor network, typically concentrated in specific sectors, geographies, or deal sizes. This means many promising transactions fall outside their natural ecosystem.</p>
+                    <p>However, when these firms collaborate strategically, their combined networks create something far more powerful than the sum of their parts. A firm strong in UK technology investors can partner with one focused on European infrastructure funds, creating syndication capabilities that neither could achieve alone.</p>
+                    <p>By pooling expertise and networks while maintaining their independence, boutique firms can compete more effectively with larger institutions whilst preserving the personal service and specialisation that defines their value proposition.</p>
+                </section>
+
+                <section class="content-section">
+                    <h3>Building Better Markets Together</h3>
+                    <p>Syndicate+ facilitates this collaboration by intelligently matching firms based on complementary strengths, creating syndicates optimised for each specific transaction. This approach preserves the human relationships that make deals happen, whilst overcoming the network limitations that hold individual firms back.</p>
+                    <p>The result is a more efficient private capital market where quality transactions find appropriate investors faster, and investors gain access to a broader universe of opportunities—all facilitated through the trusted intermediation of experienced professionals.</p>
+                </section>
+
+                <div class="cta-section">
+                    <p><strong>Ready to expand your capabilities through strategic collaboration?</strong></p>
+                    <button class="btn btn-primary btn-lg" id="learnMoreSignupBtn">Join Syndicate+</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section (shown after login) -->
+    <section id="dashboard" class="dashboard" style="display:none;">
+        <div class="dashboard-container">
+            <aside class="sidebar">
+                <div class="sidebar-menu">
+                    <a href="#" class="menu-item active" data-view="overview">
+                        <i class="fas fa-home"></i> Overview
+                    </a>
+                    <a href="#" class="menu-item" data-view="profile">
+                        <i class="fas fa-building"></i> Firm Profile
+                    </a>
+                    <a href="#" class="menu-item" data-view="deals">
+                        <i class="fas fa-briefcase"></i> My Deals
+                    </a>
+                    <a href="#" class="menu-item" data-view="create-deal">
+                        <i class="fas fa-plus-circle"></i> Create Deal
+                    </a>
+                    <a href="#" class="menu-item" data-view="syndicate">
+                        <i class="fas fa-users"></i> Build Syndicate
+                    </a>
+                    <a href="#" class="menu-item" data-view="invitations">
+                        <i class="fas fa-envelope"></i> Invitations
+                    </a>
+                </div>
+            </aside>
+
+            <main class="dashboard-main">
+                <!-- Overview View -->
+                <div id="overviewView" class="dashboard-view active">
+                    <h1>Welcome, <span id="firmNameDisplay"></span></h1>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-briefcase"></i>
+                            <div class="stat-value" id="totalDeals">0</div>
+                            <div class="stat-label">Active Deals</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-users"></i>
+                            <div class="stat-value" id="syndicateMembers">0</div>
+                            <div class="stat-label">Syndicate Members</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-envelope"></i>
+                            <div class="stat-value" id="pendingInvitations">0</div>
+                            <div class="stat-label">Pending Invitations</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <h2>Quick Actions</h2>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="switchView('create-deal')">
+                                <i class="fas fa-plus"></i> Create New Deal
+                            </button>
+                            <button class="btn btn-outline" onclick="switchView('syndicate')">
+                                <i class="fas fa-search"></i> Find Syndicate Partners
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile View -->
+                <div id="profileView" class="dashboard-view">
+                    <h1>Firm Profile</h1>
+                    <form id="profileForm" class="profile-form">
+                        <div class="form-section">
+                            <h3>Investor Base Details</h3>
+                            <div class="form-group">
+                                <label>Jurisdictions (comma-separated)</label>
+                                <input type="text" id="profileJurisdictions" placeholder="e.g., UK, EU, US">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Typical Deal Size - Min (£)</label>
+                                    <input type="number" id="profileDealMin" placeholder="1000000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Typical Deal Size - Max (£)</label>
+                                    <input type="number" id="profileDealMax" placeholder="10000000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Sector Focus (comma-separated)</label>
+                                <input type="text" id="profileSectors" placeholder="e.g., Technology, Healthcare, FinTech">
+                            </div>
+                            <div class="form-group">
+                                <label>Recent Transactions (one per line)</label>
+                                <textarea id="profileTransactions" rows="4" placeholder="List your recent deals..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Firm Description</label>
+                                <textarea id="profileDescription" rows="3" placeholder="Brief description of your firm..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Profile</button>
+                    </form>
+                </div>
+
+                <!-- My Deals View -->
+                <div id="dealsView" class="dashboard-view">
+                    <h1>My Deals</h1>
+                    <div id="dealsList" class="deals-list">
+                        <!-- Deals will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Create Deal View -->
+                <div id="create-dealView" class="dashboard-view">
+                    <h1>Transaction Details</h1>
+                    <form id="createDealForm" class="deal-form">
+                        <div class="form-section">
+                            <h3>Company Information</h3>
+                            <div class="form-group">
+                                <label>Company Name</label>
+                                <input type="text" id="companyName" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Industry</label>
+                                    <input type="text" id="dealSector" required placeholder="e.g., Technology, Healthcare, FinTech">
+                                </div>
+                                <div class="form-group">
+                                    <label>Jurisdiction</label>
+                                    <input type="text" id="dealJurisdiction" required placeholder="e.g., UK, US, EU">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Fundraising Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Fundraising Stage</label>
+                                    <select id="dealStage" required>
+                                        <option value="">Select stage</option>
+                                        <option value="Friends & Family">Friends & Family</option>
+                                        <option value="Pre-Seed">Pre-Seed</option>
+                                        <option value="Seed">Seed</option>
+                                        <option value="Series A">Series A</option>
+                                        <option value="Series B">Series B</option>
+                                        <option value="Series C">Series C</option>
+                                        <option value="Pre-IPO">Pre-IPO</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Deal Type</label>
+                                    <select id="dealType" required>
+                                        <option value="">Select type</option>
+                                        <option value="Equity">Equity</option>
+                                        <option value="Debt">Debt</option>
+                                        <option value="Mezzanine">Mezzanine</option>
+                                        <option value="Convertible">Convertible</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Currency</label>
+                                    <select id="dealCurrency" required>
+                                        <option value="">Select currency</option>
+                                        <option value="GBP">GBP (£)</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="CHF">CHF (Fr)</option>
+                                        <option value="AUD">AUD ($)</option>
+                                        <option value="CAD">CAD ($)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Size of Raise</label>
+                                    <input type="number" id="dealAmount" required placeholder="e.g., 1000000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Deal Information</h3>
+                            <div class="form-group">
+                                <label>Deal Description</label>
+                                <textarea id="dealDescription" rows="4" required placeholder="Provide a detailed description of the opportunity..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Target Investor Profile</label>
+                                <textarea id="dealInvestorProfile" rows="3" placeholder="Describe ideal investors..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Deal-Locker Materials</h3>
+                            <p class="form-help-text">Upload documents that will be shared with syndicate members after NDA acceptance</p>
+
+                            <div class="form-group">
+                                <label>Investment Memorandum</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="investmentMemo" accept=".pdf,.doc,.docx">
+                                    <span class="file-upload-label">Choose file or drag here</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Pitch Deck</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="pitchDeck" accept=".pdf,.ppt,.pptx">
+                                    <span class="file-upload-label">Choose file or drag here</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Additional Materials</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="additionalMaterials" multiple>
+                                    <span class="file-upload-label">Choose files or drag here (multiple files allowed)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Create Deal</button>
+                    </form>
+                </div>
+
+                <!-- Build Syndicate View -->
+                <div id="syndicateView" class="dashboard-view">
+                    <h1>Build Your Syndicate</h1>
+
+                    <div class="syndicate-builder">
+                        <div class="form-group">
+                            <label>Select Deal</label>
+                            <select id="syndicateDealSelect">
+                                <option value="">Choose a deal...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Number of Firms in Syndicate</label>
+                            <input type="number" id="syndicateSize" value="5" min="1" max="10">
+                        </div>
+
+                        <button class="btn btn-primary" id="getRecommendationsBtn">
+                            <i class="fas fa-magic"></i> Get AI Recommendations
+                        </button>
+                    </div>
+
+                    <div id="recommendationsSection" style="display:none;">
+                        <h2>Recommended Syndicate Partners</h2>
+                        <div id="recommendationsList" class="recommendations-list">
+                            <!-- Recommendations will be populated here -->
+                        </div>
+                        <button class="btn btn-primary" id="sendInvitationsBtn">
+                            <i class="fas fa-paper-plane"></i> Send Invitations to Selected Firms
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Invitations View -->
+                <div id="invitationsView" class="dashboard-view">
+                    <h1>Invitations</h1>
+                    <div class="invitations-tabs">
+                        <button class="tab-btn active" data-tab="received">Received</button>
+                        <button class="tab-btn" data-tab="sent">Sent</button>
+                    </div>
+
+                    <div id="receivedInvitations" class="invitations-content active">
+                        <!-- Received invitations -->
+                    </div>
+
+                    <div id="sentInvitations" class="invitations-content">
+                        <!-- Sent invitations -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
