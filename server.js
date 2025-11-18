@@ -41,6 +41,12 @@ app.get('*', (req, res) => {
 // Export db for use in routes
 app.locals.db = db;
 
-app.listen(PORT, () => {
-  console.log(`Syndicate+ server running on http://localhost:${PORT}`);
-});
+// Only listen on port in local development (not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Syndicate+ server running on http://localhost:${PORT}`);
+  });
+}
+
+// Export for Vercel
+module.exports = app;
