@@ -19,6 +19,9 @@ const db = {
   ndas: []
 };
 
+// Export db for use in routes (must be before importing routes)
+app.locals.db = db;
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const firmRoutes = require('./routes/firms');
@@ -33,13 +36,10 @@ app.use('/api/deals', dealRoutes);
 app.use('/api/syndicate', syndicateRoutes);
 app.use('/api/invitations', invitationRoutes);
 
-// Serve static files
+// Serve static files (must be last to not catch API routes)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-// Export db for use in routes
-app.locals.db = db;
 
 // Only listen on port in local development (not on Vercel)
 if (process.env.NODE_ENV !== 'production') {
