@@ -684,6 +684,39 @@ section[id] {
     color: var(--text-dark);
 }
 
+/* Deal-Locker Section */
+.deal-locker-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.deal-locker-files {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.deal-file {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-light);
+    border-radius: 6px;
+    border-left: 3px solid var(--secondary-color);
+}
+
+.deal-file i {
+    color: var(--secondary-color);
+    font-size: 1.25rem;
+}
+
+.deal-file span {
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
 /* Syndicate Builder */
 .syndicate-builder {
     background: white;

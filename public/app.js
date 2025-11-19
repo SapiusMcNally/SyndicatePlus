@@ -1,5 +1,7 @@
 // API Configuration
-const API_URL = 'http://localhost:3000/api';
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : `${window.location.origin}/api`;
 let authToken = localStorage.getItem('authToken');
 let currentFirm = JSON.parse(localStorage.getItem('currentFirm'));
 
@@ -355,6 +357,11 @@ async function handleProfileUpdate(e) {
 async function handleCreateDeal(e) {
     e.preventDefault();
 
+    // Collect file names
+    const investmentMemoFiles = document.getElementById('investmentMemo').files;
+    const pitchDeckFiles = document.getElementById('pitchDeck').files;
+    const additionalMaterialsFiles = document.getElementById('additionalMaterials').files;
+
     const dealData = {
         companyName: document.getElementById('companyName').value,
         sector: document.getElementById('dealSector').value,
@@ -365,10 +372,12 @@ async function handleCreateDeal(e) {
         targetAmount: parseFloat(document.getElementById('dealAmount').value),
         description: document.getElementById('dealDescription').value,
         targetInvestorProfile: document.getElementById('dealInvestorProfile').value,
-        // File metadata (in production, these would be uploaded to cloud storage)
-        hasInvestmentMemo: !!document.getElementById('investmentMemo').files.length,
-        hasPitchDeck: !!document.getElementById('pitchDeck').files.length,
-        additionalMaterialsCount: document.getElementById('additionalMaterials').files.length
+        // Store file names for deal-locker
+        dealLocker: {
+            investmentMemo: investmentMemoFiles.length > 0 ? investmentMemoFiles[0].name : null,
+            pitchDeck: pitchDeckFiles.length > 0 ? pitchDeckFiles[0].name : null,
+            additionalMaterials: Array.from(additionalMaterialsFiles).map(f => f.name)
+        }
     };
 
     try {
@@ -441,6 +450,33 @@ async function loadMyDeals() {
                 <p>${deal.description}</p>
                 ${deal.syndicateMembers && deal.syndicateMembers.length > 0 ?
                     `<p class="mt-1"><strong>Syndicate Members:</strong> ${deal.syndicateMembers.length}</p>` : ''}
+
+                ${deal.dealLocker && (deal.dealLocker.investmentMemo || deal.dealLocker.pitchDeck || deal.dealLocker.additionalMaterials?.length > 0) ? `
+                <div class="deal-locker-section">
+                    <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-dark);"><i class="fas fa-lock"></i> Deal-Locker Materials</h4>
+                    <div class="deal-locker-files">
+                        ${deal.dealLocker.investmentMemo ? `
+                            <div class="deal-file">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Investment Memorandum: ${deal.dealLocker.investmentMemo}</span>
+                            </div>
+                        ` : ''}
+                        ${deal.dealLocker.pitchDeck ? `
+                            <div class="deal-file">
+                                <i class="fas fa-file-powerpoint"></i>
+                                <span>Pitch Deck: ${deal.dealLocker.pitchDeck}</span>
+                            </div>
+                        ` : ''}
+                        ${deal.dealLocker.additionalMaterials && deal.dealLocker.additionalMaterials.length > 0 ?
+                            deal.dealLocker.additionalMaterials.map(file => `
+                                <div class="deal-file">
+                                    <i class="fas fa-file"></i>
+                                    <span>Additional: ${file}</span>
+                                </div>
+                            `).join('') : ''}
+                    </div>
+                </div>
+                ` : ''}
             </div>
         `).join('');
     } catch (error) {
