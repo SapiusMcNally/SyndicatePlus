@@ -3,8 +3,3 @@ node_modules/
 *.log
 .DS_Store
 package-lock.json
-
-# Large video files
-public/*.mov
-public/*.mp4
-public/*.avi
