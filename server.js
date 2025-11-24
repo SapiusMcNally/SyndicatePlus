@@ -11,9 +11,13 @@ const PORT = process.env.PORT || 3000;
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      message: 'Too many requests from this IP, please try again later.'
+    });
+  }
 });
 
 // General API rate limiting
@@ -22,6 +26,11 @@ const apiLimiter = rateLimit({
   max: 100, // Limit each IP to 100 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      message: 'Too many API requests, please try again later.'
+    });
+  }
 });
 
 // Middleware
@@ -46,6 +55,15 @@ app.use('/api/invitations', apiLimiter, invitationRoutes);
 // Serve static files (must be last to not catch API routes)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Global error handler - must be after all routes
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
 });
 
 // Only listen on port in local development (not on Vercel)
