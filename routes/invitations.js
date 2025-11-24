@@ -1,35 +1,38 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
+const prisma = require('../lib/prisma');
 
 // Send invitation to firm
-router.post('/send', authMiddleware, (req, res) => {
+router.post('/send', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { dealId, firmId, message } = req.body;
 
-    const deal = db.deals.find(d => d.id === dealId && d.firmId === req.user.firmId);
-    if (!deal) {
+    const deal = await prisma.deal.findUnique({
+      where: { id: dealId }
+    });
+
+    if (!deal || deal.firmId !== req.user.firmId) {
       return res.status(404).json({ message: 'Deal not found or access denied' });
     }
 
-    const targetFirm = db.firms.find(f => f.id === firmId);
+    const targetFirm = await prisma.firm.findUnique({
+      where: { id: firmId }
+    });
+
     if (!targetFirm) {
       return res.status(404).json({ message: 'Target firm not found' });
     }
 
-    const invitation = {
-      id: uuidv4(),
-      dealId,
-      fromFirmId: req.user.firmId,
-      toFirmId: firmId,
-      message,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-
-    db.invitations.push(invitation);
+    const invitation = await prisma.invitation.create({
+      data: {
+        dealId,
+        fromFirmId: req.user.firmId,
+        toFirmId: firmId,
+        message,
+        status: 'pending'
+      }
+    });
 
     res.status(201).json({
       message: `Invitation sent to ${targetFirm.firmName}`,
@@ -41,21 +44,32 @@ router.post('/send', authMiddleware, (req, res) => {
 });
 
 // Get received invitations
-router.get('/received', authMiddleware, (req, res) => {
+router.get('/received', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const invitations = db.invitations.filter(i => i.toFirmId === req.user.firmId);
-
-    // Enrich with deal and firm info
-    const enrichedInvitations = invitations.map(inv => {
-      const deal = db.deals.find(d => d.id === inv.dealId);
-      const fromFirm = db.firms.find(f => f.id === inv.fromFirmId);
-      return {
-        ...inv,
-        deal: deal ? { id: deal.id, name: deal.dealName, sector: deal.sector } : null,
-        fromFirm: fromFirm ? { id: fromFirm.id, name: fromFirm.firmName } : null
-      };
+    const invitations = await prisma.invitation.findMany({
+      where: { toFirmId: req.user.firmId },
+      include: {
+        deal: {
+          select: {
+            id: true,
+            dealName: true,
+            sector: true
+          }
+        },
+        fromFirm: {
+          select: {
+            id: true,
+            firmName: true
+          }
+        }
+      }
     });
+
+    const enrichedInvitations = invitations.map(inv => ({
+      ...inv,
+      deal: inv.deal ? { id: inv.deal.id, name: inv.deal.dealName, sector: inv.deal.sector } : null,
+      fromFirm: inv.fromFirm ? { id: inv.fromFirm.id, name: inv.fromFirm.firmName } : null
+    }));
 
     res.json(enrichedInvitations);
   } catch (error) {
@@ -64,21 +78,31 @@ router.get('/received', authMiddleware, (req, res) => {
 });
 
 // Get sent invitations
-router.get('/sent', authMiddleware, (req, res) => {
+router.get('/sent', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const invitations = db.invitations.filter(i => i.fromFirmId === req.user.firmId);
-
-    // Enrich with firm info
-    const enrichedInvitations = invitations.map(inv => {
-      const deal = db.deals.find(d => d.id === inv.dealId);
-      const toFirm = db.firms.find(f => f.id === inv.toFirmId);
-      return {
-        ...inv,
-        deal: deal ? { id: deal.id, name: deal.dealName } : null,
-        toFirm: toFirm ? { id: toFirm.id, name: toFirm.firmName } : null
-      };
+    const invitations = await prisma.invitation.findMany({
+      where: { fromFirmId: req.user.firmId },
+      include: {
+        deal: {
+          select: {
+            id: true,
+            dealName: true
+          }
+        },
+        toFirm: {
+          select: {
+            id: true,
+            firmName: true
+          }
+        }
+      }
     });
+
+    const enrichedInvitations = invitations.map(inv => ({
+      ...inv,
+      deal: inv.deal ? { id: inv.deal.id, name: inv.deal.dealName } : null,
+      toFirm: inv.toFirm ? { id: inv.toFirm.id, name: inv.toFirm.firmName } : null
+    }));
 
     res.json(enrichedInvitations);
   } catch (error) {
@@ -87,44 +111,56 @@ router.get('/sent', authMiddleware, (req, res) => {
 });
 
 // Respond to invitation
-router.post('/respond', authMiddleware, (req, res) => {
+router.post('/respond', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { invitationId, response, ndaSigned } = req.body; // response: 'accepted' or 'declined'
 
-    const invitationIndex = db.invitations.findIndex(
-      i => i.id === invitationId && i.toFirmId === req.user.firmId
-    );
+    const invitation = await prisma.invitation.findUnique({
+      where: { id: invitationId }
+    });
 
-    if (invitationIndex === -1) {
+    if (!invitation || invitation.toFirmId !== req.user.firmId) {
       return res.status(404).json({ message: 'Invitation not found' });
     }
 
-    db.invitations[invitationIndex].status = response;
-    db.invitations[invitationIndex].respondedAt = new Date().toISOString();
+    const updatedInvitation = await prisma.invitation.update({
+      where: { id: invitationId },
+      data: {
+        status: response,
+        respondedAt: new Date()
+      }
+    });
 
     if (response === 'accepted' && ndaSigned) {
-      // Add firm to syndicate
-      const dealIndex = db.deals.findIndex(d => d.id === db.invitations[invitationIndex].dealId);
-      if (dealIndex !== -1) {
-        if (!db.deals[dealIndex].syndicateMembers) {
-          db.deals[dealIndex].syndicateMembers = [];
+      // Add firm to syndicate and record NDA
+      const deal = await prisma.deal.findUnique({
+        where: { id: invitation.dealId }
+      });
+
+      if (deal) {
+        const syndicateMembers = deal.syndicateMembers || [];
+        if (!syndicateMembers.includes(req.user.firmId)) {
+          syndicateMembers.push(req.user.firmId);
         }
-        db.deals[dealIndex].syndicateMembers.push(req.user.firmId);
+
+        await prisma.deal.update({
+          where: { id: invitation.dealId },
+          data: { syndicateMembers }
+        });
 
         // Record NDA
-        db.ndas.push({
-          id: uuidv4(),
-          dealId: db.invitations[invitationIndex].dealId,
-          firmId: req.user.firmId,
-          signedAt: new Date().toISOString()
+        await prisma.nDA.create({
+          data: {
+            dealId: invitation.dealId,
+            firmId: req.user.firmId
+          }
         });
       }
     }
 
     res.json({
       message: `Invitation ${response}`,
-      invitation: db.invitations[invitationIndex]
+      invitation: updatedInvitation
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

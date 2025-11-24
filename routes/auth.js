@@ -2,16 +2,18 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
+const prisma = require('../lib/prisma');
 
 // Register new firm
 router.post('/register', async (req, res) => {
   try {
     const { firmName, email, password, contactPerson } = req.body;
-    const db = req.app.locals.db;
 
     // Check if firm already exists
-    const existingFirm = db.firms.find(f => f.email === email);
+    const existingFirm = await prisma.firm.findUnique({
+      where: { email }
+    });
+
     if (existingFirm) {
       return res.status(400).json({ message: 'Firm already registered with this email' });
     }
@@ -20,22 +22,20 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new firm
-    const newFirm = {
-      id: uuidv4(),
-      firmName,
-      email,
-      password: hashedPassword,
-      contactPerson,
-      profile: {
-        jurisdictions: [],
-        typicalDealSize: { min: 0, max: 0 },
-        sectorFocus: [],
-        recentTransactions: []
-      },
-      createdAt: new Date().toISOString()
-    };
-
-    db.firms.push(newFirm);
+    const newFirm = await prisma.firm.create({
+      data: {
+        firmName,
+        email,
+        password: hashedPassword,
+        profile: {
+          contactPerson,
+          jurisdictions: [],
+          typicalDealSize: { min: 0, max: 0 },
+          sectorFocus: [],
+          recentTransactions: []
+        }
+      }
+    });
 
     // Create JWT token
     const token = jwt.sign(
@@ -62,10 +62,12 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const db = req.app.locals.db;
 
     // Find firm
-    const firm = db.firms.find(f => f.email === email);
+    const firm = await prisma.firm.findUnique({
+      where: { email }
+    });
+
     if (!firm) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }

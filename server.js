@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: '.env.local' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,17 +10,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-
-// In-memory database (for development - replace with real database in production)
-const db = {
-  firms: [],
-  deals: [],
-  invitations: [],
-  ndas: []
-};
-
-// Export db for use in routes (must be before importing routes)
-app.locals.db = db;
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -43,8 +32,9 @@ app.get('*', (req, res) => {
 
 // Only listen on port in local development (not on Vercel)
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Syndicate+ server running on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Syndicate+ server running on http://0.0.0.0:${PORT}`);
+    console.log(`Server accessible from other devices at http://<your-ip>:${PORT}`);
   });
 }
 

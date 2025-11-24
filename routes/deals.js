@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
+const prisma = require('../lib/prisma');
 
 // Create new deal
-router.post('/create', authMiddleware, (req, res) => {
+router.post('/create', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const {
       dealName,
       targetAmount,
@@ -17,23 +16,20 @@ router.post('/create', authMiddleware, (req, res) => {
       targetInvestorProfile
     } = req.body;
 
-    const newDeal = {
-      id: uuidv4(),
-      firmId: req.user.firmId,
-      dealName,
-      targetAmount,
-      sector,
-      jurisdiction,
-      dealType,
-      description,
-      targetInvestorProfile,
-      status: 'draft',
-      syndicateMembers: [],
-      invitedFirms: [],
-      createdAt: new Date().toISOString()
-    };
+    const newDeal = await prisma.deal.create({
+      data: {
+        firmId: req.user.firmId,
+        dealName,
+        targetAmount,
+        sector,
+        jurisdiction,
+        dealType,
+        description,
+        targetInvestorProfile,
+        status: 'draft'
+      }
+    });
 
-    db.deals.push(newDeal);
     res.status(201).json({ message: 'Deal created successfully', deal: newDeal });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -41,10 +37,11 @@ router.post('/create', authMiddleware, (req, res) => {
 });
 
 // Get all deals for a firm
-router.get('/my-deals', authMiddleware, (req, res) => {
+router.get('/my-deals', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const deals = db.deals.filter(d => d.firmId === req.user.firmId);
+    const deals = await prisma.deal.findMany({
+      where: { firmId: req.user.firmId }
+    });
     res.json(deals);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -52,12 +49,15 @@ router.get('/my-deals', authMiddleware, (req, res) => {
 });
 
 // Get deals where firm is invited
-router.get('/invited', authMiddleware, (req, res) => {
+router.get('/invited', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const invitedDeals = db.deals.filter(d =>
-      d.invitedFirms.includes(req.user.firmId)
-    );
+    const invitedDeals = await prisma.deal.findMany({
+      where: {
+        invitedFirms: {
+          has: req.user.firmId
+        }
+      }
+    });
     res.json(invitedDeals);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -65,10 +65,11 @@ router.get('/invited', authMiddleware, (req, res) => {
 });
 
 // Get single deal
-router.get('/:id', authMiddleware, (req, res) => {
+router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const deal = db.deals.find(d => d.id === req.params.id);
+    const deal = await prisma.deal.findUnique({
+      where: { id: req.params.id }
+    });
 
     if (!deal) {
       return res.status(404).json({ message: 'Deal not found' });
@@ -86,19 +87,23 @@ router.get('/:id', authMiddleware, (req, res) => {
 });
 
 // Update deal
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const dealIndex = db.deals.findIndex(d => d.id === req.params.id && d.firmId === req.user.firmId);
+    const deal = await prisma.deal.findUnique({
+      where: { id: req.params.id }
+    });
 
-    if (dealIndex === -1) {
+    if (!deal || deal.firmId !== req.user.firmId) {
       return res.status(404).json({ message: 'Deal not found or access denied' });
     }
 
     const updates = req.body;
-    db.deals[dealIndex] = { ...db.deals[dealIndex], ...updates, id: db.deals[dealIndex].id };
+    const updatedDeal = await prisma.deal.update({
+      where: { id: req.params.id },
+      data: updates
+    });
 
-    res.json({ message: 'Deal updated successfully', deal: db.deals[dealIndex] });
+    res.json({ message: 'Deal updated successfully', deal: updatedDeal });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

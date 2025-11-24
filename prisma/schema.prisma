@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Firm {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firmName  String
+  profile   Json?
+  createdAt DateTime @default(now())
+
+  deals            Deal[]
+  sentInvitations  Invitation[] @relation("InvitationSender")
+  receivedInvitations Invitation[] @relation("InvitationReceiver")
+  ndas             NDA[]
+}
+
+model Deal {
+  id                    String   @id @default(uuid())
+  firmId                String
+  dealName              String
+  targetAmount          Float
+  sector                String
+  jurisdiction          String
+  dealType              String
+  description           String?
+  targetInvestorProfile String?
+  status                String   @default("draft")
+  invitedFirms          String[] @default([])
+  syndicateMembers      String[] @default([])
+  createdAt             DateTime @default(now())
+
+  firm        Firm         @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  invitations Invitation[]
+  ndas        NDA[]
+}
+
+model Invitation {
+  id          String   @id @default(uuid())
+  dealId      String
+  fromFirmId  String
+  toFirmId    String
+  status      String   @default("pending")
+  message     String?
+  createdAt   DateTime @default(now())
+  respondedAt DateTime?
+
+  deal     Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  fromFirm Firm @relation("InvitationSender", fields: [fromFirmId], references: [id], onDelete: Cascade)
+  toFirm   Firm @relation("InvitationReceiver", fields: [toFirmId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, toFirmId])
+}
+
+model NDA {
+  id        String   @id @default(uuid())
+  dealId    String
+  firmId    String
+  signedAt  DateTime @default(now())
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, firmId])
+}

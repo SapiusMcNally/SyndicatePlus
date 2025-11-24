@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
+const prisma = require('../lib/prisma');
 
 // Intelligent syndicate matching algorithm
 function calculateSyndicateMatch(deal, firm) {
@@ -43,18 +44,29 @@ function calculateSyndicateMatch(deal, firm) {
 }
 
 // Get syndicate recommendations
-router.post('/recommend', authMiddleware, (req, res) => {
+router.post('/recommend', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { dealId, syndicateSize } = req.body;
 
-    const deal = db.deals.find(d => d.id === dealId && d.firmId === req.user.firmId);
-    if (!deal) {
+    const deal = await prisma.deal.findUnique({
+      where: { id: dealId }
+    });
+
+    if (!deal || deal.firmId !== req.user.firmId) {
       return res.status(404).json({ message: 'Deal not found or access denied' });
     }
 
     // Get all other firms
-    const otherFirms = db.firms.filter(f => f.id !== req.user.firmId);
+    const otherFirms = await prisma.firm.findMany({
+      where: {
+        id: { not: req.user.firmId }
+      },
+      select: {
+        id: true,
+        firmName: true,
+        profile: true
+      }
+    });
 
     // Calculate match scores
     const matches = otherFirms.map(firm => {
@@ -88,22 +100,29 @@ router.post('/recommend', authMiddleware, (req, res) => {
 });
 
 // Build syndicate (save selections)
-router.post('/build', authMiddleware, (req, res) => {
+router.post('/build', authMiddleware, async (req, res) => {
   try {
-    const db = req.app.locals.db;
     const { dealId, selectedFirms } = req.body;
 
-    const dealIndex = db.deals.findIndex(d => d.id === dealId && d.firmId === req.user.firmId);
-    if (dealIndex === -1) {
+    const deal = await prisma.deal.findUnique({
+      where: { id: dealId }
+    });
+
+    if (!deal || deal.firmId !== req.user.firmId) {
       return res.status(404).json({ message: 'Deal not found or access denied' });
     }
 
-    db.deals[dealIndex].invitedFirms = selectedFirms;
-    db.deals[dealIndex].status = 'syndicate_building';
+    const updatedDeal = await prisma.deal.update({
+      where: { id: dealId },
+      data: {
+        invitedFirms: selectedFirms,
+        status: 'syndicate_building'
+      }
+    });
 
     res.json({
       message: 'Syndicate selections saved',
-      deal: db.deals[dealIndex]
+      deal: updatedDeal
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
