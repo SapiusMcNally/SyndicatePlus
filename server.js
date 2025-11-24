@@ -1,10 +1,28 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config({ path: '.env.local' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// General API rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware
 app.use(cors());
@@ -18,12 +36,12 @@ const dealRoutes = require('./routes/deals');
 const syndicateRoutes = require('./routes/syndicate');
 const invitationRoutes = require('./routes/invitations');
 
-// Use routes
-app.use('/api/auth', authRoutes);
-app.use('/api/firms', firmRoutes);
-app.use('/api/deals', dealRoutes);
-app.use('/api/syndicate', syndicateRoutes);
-app.use('/api/invitations', invitationRoutes);
+// Use routes with rate limiting
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/firms', apiLimiter, firmRoutes);
+app.use('/api/deals', apiLimiter, dealRoutes);
+app.use('/api/syndicate', apiLimiter, syndicateRoutes);
+app.use('/api/invitations', apiLimiter, invitationRoutes);
 
 // Serve static files (must be last to not catch API routes)
 app.get('*', (req, res) => {
