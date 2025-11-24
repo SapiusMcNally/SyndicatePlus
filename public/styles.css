@@ -176,7 +176,7 @@ section[id] {
 .hero-title {
     font-size: 3.5rem;
     line-height: 1.2;
-    color: var(--secondary-color);
+    color: white;
     margin-bottom: 1.5rem;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
