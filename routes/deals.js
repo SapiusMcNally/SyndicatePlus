@@ -16,23 +16,69 @@ router.post('/create', authMiddleware, async (req, res) => {
       targetInvestorProfile
     } = req.body;
 
+    // Validate required fields
+    if (!dealName || !sector || !jurisdiction || !dealType) {
+      return res.status(400).json({
+        message: 'Missing required fields. Please provide dealName, sector, jurisdiction, and dealType.'
+      });
+    }
+
+    // Validate targetAmount
+    const parsedAmount = parseFloat(targetAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({
+        message: 'Invalid target amount. Please provide a valid positive number.'
+      });
+    }
+
+    // Validate firmId
+    if (!req.user || !req.user.firmId) {
+      return res.status(401).json({
+        message: 'Authentication error. Please log in again.'
+      });
+    }
+
+    console.log('Creating deal with data:', {
+      dealName,
+      targetAmount: parsedAmount,
+      sector,
+      jurisdiction,
+      dealType,
+      description,
+      targetInvestorProfile,
+      firmId: req.user.firmId
+    });
+
     const newDeal = await prisma.deal.create({
       data: {
         firmId: req.user.firmId,
         dealName,
-        targetAmount,
+        targetAmount: parsedAmount,
         sector,
         jurisdiction,
         dealType,
-        description,
-        targetInvestorProfile,
+        description: description || null,
+        targetInvestorProfile: targetInvestorProfile || null,
         status: 'draft'
       }
     });
 
     res.status(201).json({ message: 'Deal created successfully', deal: newDeal });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error creating deal:', error);
+
+    // Provide more specific error messages
+    if (error.code === 'P2003') {
+      return res.status(400).json({
+        message: 'Invalid firm ID. Please log in again.',
+        error: 'Foreign key constraint failed'
+      });
+    }
+
+    res.status(500).json({
+      message: 'Server error while creating deal',
+      error: error.message
+    });
   }
 });
 
