@@ -15,12 +15,17 @@ model Firm {
   password  String
   firmName  String
   profile   Json?
+  isAdmin   Boolean  @default(false)
+  role      String   @default("user")
+  status    String   @default("active")
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  deals            Deal[]
-  sentInvitations  Invitation[] @relation("InvitationSender")
+  deals               Deal[]
+  sentInvitations     Invitation[] @relation("InvitationSender")
   receivedInvitations Invitation[] @relation("InvitationReceiver")
-  ndas             NDA[]
+  ndas                NDA[]
+  enrichment          FirmEnrichment?
 }
 
 model Deal {
@@ -70,4 +75,29 @@ model NDA {
   firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
 
   @@unique([dealId, firmId])
+}
+
+model FirmEnrichment {
+  id                String    @id @default(uuid())
+  firmId            String    @unique
+  enrichmentStatus  String    @default("pending")
+  lastEnriched      DateTime?
+  enrichmentData    Json?
+  errorMessage      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+}
+
+model AgentJob {
+  id          String    @id @default(uuid())
+  jobType     String
+  status      String    @default("queued")
+  payload     Json
+  result      Json?
+  errorMessage String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
 }

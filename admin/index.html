@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syndicate+ Admin Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="loginScreen" class="auth-screen">
+    <div class="auth-container">
+      <div class="auth-card">
+        <h1>Syndicate+ Admin</h1>
+        <p class="subtitle">Administrator Dashboard</p>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </button>
+        </form>
+
+        <div id="loginError" class="error-message" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminDashboard" style="display: none;">
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="header-content">
+        <h1><i class="fas fa-shield-alt"></i> Syndicate+ Admin</h1>
+        <div class="header-actions">
+          <span id="adminName" class="admin-name"></span>
+          <button id="logoutBtn" class="btn btn-secondary">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="admin-nav">
+      <button class="nav-btn active" data-view="dashboard">
+        <i class="fas fa-chart-line"></i> Dashboard
+      </button>
+      <button class="nav-btn" data-view="members">
+        <i class="fas fa-users"></i> Members
+      </button>
+      <button class="nav-btn" data-view="analytics">
+        <i class="fas fa-chart-bar"></i> Analytics
+      </button>
+      <button class="nav-btn" data-view="enrichment">
+        <i class="fas fa-database"></i> Enrichment
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <!-- Dashboard View -->
+      <div id="dashboardView" class="view active">
+        <h2>Platform Overview</h2>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #3b82f6;">
+              <i class="fas fa-building"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="statTotalFirms">-</h3>
+              <p>Total Firms</p>
+              <small id="statActiveFirms" class="stat-detail">- active</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #10b981;">
+              <i class="fas fa-handshake"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="statTotalDeals">-</h3>
+              <p>Total Deals</p>
+              <small id="statActiveDeals" class="stat-detail">- active</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #f59e0b;">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="statTotalInvitations">-</h3>
+              <p>Invitations</p>
+              <small id="statAcceptanceRate" class="stat-detail">-% acceptance</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #8b5cf6;">
+              <i class="fas fa-file-contract"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="statTotalNDAs">-</h3>
+              <p>NDAs Signed</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-sections">
+          <div class="section">
+            <h3>Enrichment Status</h3>
+            <div class="enrichment-overview">
+              <div class="enrichment-stat">
+                <span class="enrichment-label">Enriched:</span>
+                <span id="enrichmentCompleted" class="enrichment-value">-</span>
+              </div>
+              <div class="enrichment-stat">
+                <span class="enrichment-label">Pending:</span>
+                <span id="enrichmentPending" class="enrichment-value">-</span>
+              </div>
+              <div class="enrichment-stat">
+                <span class="enrichment-label">Failed:</span>
+                <span id="enrichmentFailed" class="enrichment-value">-</span>
+              </div>
+              <div class="enrichment-stat">
+                <span class="enrichment-label">Rate:</span>
+                <span id="enrichmentRate" class="enrichment-value">-%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Members View -->
+      <div id="membersView" class="view">
+        <div class="view-header">
+          <h2>Member Management</h2>
+          <div class="view-actions">
+            <input type="text" id="memberSearch" placeholder="Search firms..." class="search-input">
+            <button id="refreshMembersBtn" class="btn btn-secondary">
+              <i class="fas fa-sync"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Firm Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Deals</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="membersTableBody">
+              <tr>
+                <td colspan="7" class="loading">Loading members...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="membersPagination" class="pagination"></div>
+      </div>
+
+      <!-- Analytics View -->
+      <div id="analyticsView" class="view">
+        <div class="view-header">
+          <h2>Platform Analytics</h2>
+          <select id="analyticsTimeframe" class="select-input">
+            <option value="7d">Last 7 Days</option>
+            <option value="30d" selected>Last 30 Days</option>
+            <option value="90d">Last 90 Days</option>
+            <option value="1y">Last Year</option>
+          </select>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="analytics-card">
+            <h3>Deal Analytics</h3>
+            <div id="dealAnalytics" class="analytics-content">
+              Loading...
+            </div>
+          </div>
+
+          <div class="analytics-card">
+            <h3>Invitation Performance</h3>
+            <div id="invitationAnalytics" class="analytics-content">
+              Loading...
+            </div>
+          </div>
+
+          <div class="analytics-card">
+            <h3>Algorithm Performance</h3>
+            <div id="algorithmAnalytics" class="analytics-content">
+              Loading...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enrichment View -->
+      <div id="enrichmentView" class="view">
+        <div class="view-header">
+          <h2>Data Enrichment</h2>
+          <div class="view-actions">
+            <button id="triggerBulkEnrichmentBtn" class="btn btn-primary">
+              <i class="fas fa-play"></i> Trigger Bulk Enrichment
+            </button>
+            <button id="refreshEnrichmentBtn" class="btn btn-secondary">
+              <i class="fas fa-sync"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="enrichment-stats">
+          <div class="stat-badge">
+            <strong id="enrichmentTotalFirms">-</strong>
+            <span>Total Firms</span>
+          </div>
+          <div class="stat-badge">
+            <strong id="enrichmentEnrichedCount">-</strong>
+            <span>Enriched</span>
+          </div>
+          <div class="stat-badge">
+            <strong id="enrichmentPendingCount">-</strong>
+            <span>Pending</span>
+          </div>
+          <div class="stat-badge">
+            <strong id="enrichmentFailedCount">-</strong>
+            <span>Failed</span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Firm Name</th>
+                <th>Status</th>
+                <th>Last Enriched</th>
+                <th>Data Sources</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="enrichmentTableBody">
+              <tr>
+                <td colspan="5" class="loading">Loading enrichment data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="enrichmentPagination" class="pagination"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

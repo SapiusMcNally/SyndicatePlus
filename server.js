@@ -45,12 +45,30 @@ const dealRoutes = require('./routes/deals');
 const syndicateRoutes = require('./routes/syndicate');
 const invitationRoutes = require('./routes/invitations');
 
+// Import admin routes
+const adminMembersRoutes = require('./routes/admin/members');
+const adminAnalyticsRoutes = require('./routes/admin/analytics');
+const adminEnrichmentRoutes = require('./routes/admin/enrichment');
+
 // Use routes with rate limiting
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/firms', apiLimiter, firmRoutes);
 app.use('/api/deals', apiLimiter, dealRoutes);
 app.use('/api/syndicate', apiLimiter, syndicateRoutes);
 app.use('/api/invitations', apiLimiter, invitationRoutes);
+
+// Admin routes with API rate limiting
+app.use('/api/admin/members', apiLimiter, adminMembersRoutes);
+app.use('/api/admin/analytics', apiLimiter, adminAnalyticsRoutes);
+app.use('/api/admin/enrichment', apiLimiter, adminEnrichmentRoutes);
+
+// Serve admin static files
+app.use('/admin', express.static('admin'));
+
+// Admin panel route
+app.get('/admin*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+});
 
 // Serve static files (must be last to not catch API routes)
 app.get('*', (req, res) => {
