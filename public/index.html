@@ -21,7 +21,6 @@
                 <a href="#what-we-do" class="nav-link">What We Do</a>
                 <a href="#dashboard" class="nav-link" id="dashboardLink" style="display:none;">Dashboard</a>
                 <button class="btn btn-outline" id="loginBtn">Login</button>
-                <button class="btn btn-primary" id="signupBtn">Sign Up</button>
                 <button class="btn btn-outline" id="logoutBtn" style="display:none;">Logout</button>
             </div>
         </div>
@@ -40,7 +39,7 @@
                 <h1 class="hero-title">THE HUMAN EDGE IN PRIVATE MARKETS</h1>
                 <p class="hero-subtitle">The intelligent platform connecting boutique corporate finance firms to maximise deal completion success</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary btn-lg" id="heroSignupBtn">Get Started</button>
+                    <button class="btn btn-primary btn-lg" id="registerInterestBtn">Register Interest</button>
                     <button class="btn btn-outline btn-lg" id="learnMoreBtn">Learn More</button>
                 </div>
             </div>
@@ -183,33 +182,34 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Login</button>
             </form>
-            <p class="modal-footer">Don't have an account? <a href="#" id="switchToSignup">Sign up</a></p>
+            <p class="modal-footer">Don't have an account? <a href="#" id="switchToRegisterInterest">Register Interest</a></p>
         </div>
     </div>
 
-    <!-- Signup Modal -->
-    <div id="signupModal" class="modal">
+    <!-- Register Interest Modal -->
+    <div id="registerInterestModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>Register Your Firm</h2>
-            <form id="signupForm">
+            <h2>Register Your Interest</h2>
+            <p style="margin-bottom: 1.5rem; color: #666;">Let us know you're interested in Syndicate+ and we'll be in touch soon.</p>
+            <form id="registerInterestForm">
                 <div class="form-group">
-                    <label>Firm Name</label>
-                    <input type="text" id="signupFirmName" required>
+                    <label>Your Name</label>
+                    <input type="text" id="interestName" required>
                 </div>
                 <div class="form-group">
-                    <label>Contact Person</label>
-                    <input type="text" id="signupContactPerson" required>
+                    <label>Email Address</label>
+                    <input type="email" id="interestEmail" required>
                 </div>
                 <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="signupEmail" required>
+                    <label>Company Name</label>
+                    <input type="text" id="interestCompany" required>
                 </div>
                 <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="signupPassword" required>
+                    <label>Additional Information (Optional)</label>
+                    <textarea id="interestMessage" rows="3" placeholder="Tell us a bit about your firm and what you're interested in..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+                <button type="submit" class="btn btn-primary btn-block">Submit Interest</button>
             </form>
             <p class="modal-footer">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
         </div>

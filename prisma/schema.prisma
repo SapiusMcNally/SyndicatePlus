@@ -101,3 +101,12 @@ model AgentJob {
   updatedAt   DateTime  @updatedAt
   completedAt DateTime?
 }
+
+model InterestRegistration {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String
+  message   String?
+  createdAt DateTime @default(now())
+}

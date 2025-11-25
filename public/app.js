@@ -7,12 +7,10 @@ let currentFirm = JSON.parse(localStorage.getItem('currentFirm'));
 
 // DOM Elements
 const loginModal = document.getElementById('loginModal');
-const signupModal = document.getElementById('signupModal');
+const registerInterestModal = document.getElementById('registerInterestModal');
 const loginBtn = document.getElementById('loginBtn');
-const signupBtn = document.getElementById('signupBtn');
-const heroSignupBtn = document.getElementById('heroSignupBtn');
+const registerInterestBtn = document.getElementById('registerInterestBtn');
 const learnMoreBtn = document.getElementById('learnMoreBtn');
-const learnMoreSignupBtn = document.getElementById('learnMoreSignupBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const dashboardLink = document.getElementById('dashboardLink');
 
@@ -28,36 +26,34 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     // Modal controls
     loginBtn?.addEventListener('click', () => openModal(loginModal));
-    signupBtn?.addEventListener('click', () => openModal(signupModal));
-    heroSignupBtn?.addEventListener('click', () => openModal(signupModal));
+    registerInterestBtn?.addEventListener('click', () => openModal(registerInterestModal));
     learnMoreBtn?.addEventListener('click', () => {
-        document.getElementById('learn-more')?.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('what-we-do')?.scrollIntoView({ behavior: 'smooth' });
     });
-    learnMoreSignupBtn?.addEventListener('click', () => openModal(signupModal));
     logoutBtn?.addEventListener('click', logout);
 
     document.querySelectorAll('.close').forEach(closeBtn => {
         closeBtn.addEventListener('click', () => {
             closeModal(loginModal);
-            closeModal(signupModal);
+            closeModal(registerInterestModal);
         });
     });
 
-    document.getElementById('switchToSignup')?.addEventListener('click', (e) => {
+    document.getElementById('switchToRegisterInterest')?.addEventListener('click', (e) => {
         e.preventDefault();
         closeModal(loginModal);
-        openModal(signupModal);
+        openModal(registerInterestModal);
     });
 
     document.getElementById('switchToLogin')?.addEventListener('click', (e) => {
         e.preventDefault();
-        closeModal(signupModal);
+        closeModal(registerInterestModal);
         openModal(loginModal);
     });
 
     // Forms
     document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
-    document.getElementById('signupForm')?.addEventListener('submit', handleSignup);
+    document.getElementById('registerInterestForm')?.addEventListener('submit', handleRegisterInterest);
     document.getElementById('profileForm')?.addEventListener('submit', handleProfileUpdate);
     document.getElementById('createDealForm')?.addEventListener('submit', handleCreateDeal);
 
@@ -156,32 +152,28 @@ async function handleLogin(e) {
     }
 }
 
-async function handleSignup(e) {
+async function handleRegisterInterest(e) {
     e.preventDefault();
-    const firmName = document.getElementById('signupFirmName').value;
-    const contactPerson = document.getElementById('signupContactPerson').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
+    const name = document.getElementById('interestName').value;
+    const email = document.getElementById('interestEmail').value;
+    const company = document.getElementById('interestCompany').value;
+    const message = document.getElementById('interestMessage').value;
 
     try {
-        const response = await fetch(`${API_URL}/auth/register`, {
+        const response = await fetch(`${API_URL}/interest/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ firmName, contactPerson, email, password })
+            body: JSON.stringify({ name, email, company, message })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            authToken = data.token;
-            currentFirm = data.firm;
-            localStorage.setItem('authToken', authToken);
-            localStorage.setItem('currentFirm', JSON.stringify(currentFirm));
-            closeModal(signupModal);
-            showDashboard();
-            alert('Registration successful!');
+            closeModal(registerInterestModal);
+            alert('Thank you for your interest! We will be in touch soon.');
+            document.getElementById('registerInterestForm').reset();
         } else {
-            alert(data.message || 'Registration failed');
+            alert(data.message || 'Failed to submit interest. Please try again.');
         }
     } catch (error) {
         alert('Error: ' + error.message);
@@ -204,7 +196,7 @@ function showDashboard() {
 
     // Update navigation buttons
     loginBtn.style.display = 'none';
-    signupBtn.style.display = 'none';
+    registerInterestBtn.style.display = 'none';
     logoutBtn.style.display = 'block';
     dashboardLink.style.display = 'block';
 
@@ -224,7 +216,7 @@ function hideDashboard() {
     if (hero) hero.style.display = 'flex';
 
     loginBtn.style.display = 'block';
-    signupBtn.style.display = 'block';
+    registerInterestBtn.style.display = 'block';
     logoutBtn.style.display = 'none';
     dashboardLink.style.display = 'none';
 }

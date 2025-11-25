@@ -44,6 +44,7 @@ const firmRoutes = require('./routes/firms');
 const dealRoutes = require('./routes/deals');
 const syndicateRoutes = require('./routes/syndicate');
 const invitationRoutes = require('./routes/invitations');
+const interestRoutes = require('./routes/interest');
 
 // Import admin routes
 const adminMembersRoutes = require('./routes/admin/members');
@@ -56,6 +57,7 @@ app.use('/api/firms', apiLimiter, firmRoutes);
 app.use('/api/deals', apiLimiter, dealRoutes);
 app.use('/api/syndicate', apiLimiter, syndicateRoutes);
 app.use('/api/invitations', apiLimiter, invitationRoutes);
+app.use('/api/interest', apiLimiter, interestRoutes);
 
 // Admin routes with API rate limiting
 app.use('/api/admin/members', apiLimiter, adminMembersRoutes);
