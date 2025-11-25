@@ -363,21 +363,13 @@ async function handleCreateDeal(e) {
     const additionalMaterialsFiles = document.getElementById('additionalMaterials').files;
 
     const dealData = {
-        companyName: document.getElementById('companyName').value,
+        dealName: document.getElementById('companyName').value,
         sector: document.getElementById('dealSector').value,
         jurisdiction: document.getElementById('dealJurisdiction').value,
-        stage: document.getElementById('dealStage').value,
         dealType: document.getElementById('dealType').value,
-        currency: document.getElementById('dealCurrency').value,
         targetAmount: parseFloat(document.getElementById('dealAmount').value),
         description: document.getElementById('dealDescription').value,
-        targetInvestorProfile: document.getElementById('dealInvestorProfile').value,
-        // Store file names for deal-locker
-        dealLocker: {
-            investmentMemo: investmentMemoFiles.length > 0 ? investmentMemoFiles[0].name : null,
-            pitchDeck: pitchDeckFiles.length > 0 ? pitchDeckFiles[0].name : null,
-            additionalMaterials: Array.from(additionalMaterialsFiles).map(f => f.name)
-        }
+        targetInvestorProfile: document.getElementById('dealInvestorProfile').value
     };
 
     try {
@@ -393,7 +385,7 @@ async function handleCreateDeal(e) {
         const data = await response.json();
 
         if (response.ok) {
-            alert('Deal created successfully! Files will be uploaded to the deal-locker.');
+            alert('Deal created successfully!');
             document.getElementById('createDealForm').reset();
             // Reset file upload labels
             document.querySelectorAll('.file-upload-label').forEach(label => {
