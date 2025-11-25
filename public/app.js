@@ -157,13 +157,12 @@ async function handleRegisterInterest(e) {
     const name = document.getElementById('interestName').value;
     const email = document.getElementById('interestEmail').value;
     const company = document.getElementById('interestCompany').value;
-    const message = document.getElementById('interestMessage').value;
 
     try {
         const response = await fetch(`${API_URL}/interest/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, company, message })
+            body: JSON.stringify({ name, email, company })
         });
 
         const data = await response.json();
