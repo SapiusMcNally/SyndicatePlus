@@ -50,7 +50,10 @@ router.post('/register', async (req, res) => {
       firm: {
         id: newFirm.id,
         firmName: newFirm.firmName,
-        email: newFirm.email
+        email: newFirm.email,
+        isAdmin: newFirm.isAdmin,
+        role: newFirm.role,
+        status: newFirm.status
       }
     });
   } catch (error) {
@@ -91,7 +94,10 @@ router.post('/login', async (req, res) => {
       firm: {
         id: firm.id,
         firmName: firm.firmName,
-        email: firm.email
+        email: firm.email,
+        isAdmin: firm.isAdmin,
+        role: firm.role,
+        status: firm.status
       }
     });
   } catch (error) {
