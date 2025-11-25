@@ -10,7 +10,6 @@ const loginModal = document.getElementById('loginModal');
 const registerInterestModal = document.getElementById('registerInterestModal');
 const loginBtn = document.getElementById('loginBtn');
 const registerInterestBtn = document.getElementById('registerInterestBtn');
-const learnMoreBtn = document.getElementById('learnMoreBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const dashboardLink = document.getElementById('dashboardLink');
 
@@ -27,9 +26,6 @@ function setupEventListeners() {
     // Modal controls
     loginBtn?.addEventListener('click', () => openModal(loginModal));
     registerInterestBtn?.addEventListener('click', () => openModal(registerInterestModal));
-    learnMoreBtn?.addEventListener('click', () => {
-        document.getElementById('what-we-do')?.scrollIntoView({ behavior: 'smooth' });
-    });
     logoutBtn?.addEventListener('click', logout);
 
     document.querySelectorAll('.close').forEach(closeBtn => {
