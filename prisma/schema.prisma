@@ -19,7 +19,7 @@ model Firm {
   role      String   @default("user")
   status    String   @default("active")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 
   deals               Deal[]
   sentInvitations     Invitation[] @relation("InvitationSender")
