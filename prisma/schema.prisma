@@ -27,6 +27,7 @@ model Firm {
   ndas                NDA[]
   enrichment          FirmEnrichment?
   uploadedDocuments   Document[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Deal {
@@ -125,4 +126,15 @@ model Document {
 
   deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
   uploader    Firm     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  firmId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  firm      Firm     @relation(fields: [firmId], references: [id], onDelete: Cascade)
 }

@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const prisma = require('../lib/prisma');
+const { sendPasswordResetEmail } = require('../lib/email');
 
 // Register new firm
 router.post('/register', async (req, res) => {
@@ -101,6 +103,131 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Request password reset
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Find firm by email
+    const firm = await prisma.firm.findUnique({
+      where: { email }
+    });
+
+    // Always return success to prevent email enumeration
+    if (!firm) {
+      return res.json({
+        message: 'If an account exists with this email, you will receive a password reset link shortly.'
+      });
+    }
+
+    // Generate secure random token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // Delete any existing unused tokens for this firm
+    await prisma.passwordResetToken.deleteMany({
+      where: {
+        firmId: firm.id,
+        used: false
+      }
+    });
+
+    // Create new password reset token (expires in 1 hour)
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await prisma.passwordResetToken.create({
+      data: {
+        token: hashedToken,
+        firmId: firm.id,
+        expiresAt,
+      }
+    });
+
+    // Build reset URL
+    const resetUrl = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+    // Send password reset email
+    try {
+      await sendPasswordResetEmail(firm.email, resetUrl, firm.firmName);
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      return res.status(500).json({
+        message: 'Failed to send password reset email. Please try again later.'
+      });
+    }
+
+    res.json({
+      message: 'If an account exists with this email, you will receive a password reset link shortly.'
+    });
+  } catch (error) {
+    console.error('Error in forgot-password:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Reset password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Token and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+
+    // Hash the token to compare with database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find valid reset token
+    const resetToken = await prisma.passwordResetToken.findFirst({
+      where: {
+        token: hashedToken,
+        used: false,
+        expiresAt: {
+          gt: new Date() // Token must not be expired
+        }
+      },
+      include: {
+        firm: true
+      }
+    });
+
+    if (!resetToken) {
+      return res.status(400).json({
+        message: 'Invalid or expired password reset token'
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and mark token as used
+    await prisma.$transaction([
+      prisma.firm.update({
+        where: { id: resetToken.firmId },
+        data: { password: hashedPassword }
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { used: true }
+      })
+    ]);
+
+    res.json({
+      message: 'Password reset successful. You can now login with your new password.'
+    });
+  } catch (error) {
+    console.error('Error in reset-password:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

@@ -8,6 +8,8 @@ let currentFirm = JSON.parse(localStorage.getItem('currentFirm'));
 // DOM Elements
 const loginModal = document.getElementById('loginModal');
 const registerInterestModal = document.getElementById('registerInterestModal');
+const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+const resetPasswordModal = document.getElementById('resetPasswordModal');
 const loginBtn = document.getElementById('loginBtn');
 const registerInterestBtn = document.getElementById('registerInterestBtn');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -16,7 +18,17 @@ const dashboardLink = document.getElementById('dashboardLink');
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    if (authToken) {
+
+    // Check for password reset token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('token');
+    if (resetToken) {
+        // Store token temporarily and show reset password modal
+        sessionStorage.setItem('resetToken', resetToken);
+        openModal(resetPasswordModal);
+        // Clean URL without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (authToken) {
         showDashboard();
     }
 });
@@ -32,6 +44,8 @@ function setupEventListeners() {
         closeBtn.addEventListener('click', () => {
             closeModal(loginModal);
             closeModal(registerInterestModal);
+            closeModal(forgotPasswordModal);
+            closeModal(resetPasswordModal);
         });
     });
 
@@ -47,9 +61,23 @@ function setupEventListeners() {
         openModal(loginModal);
     });
 
+    document.getElementById('forgotPasswordLink')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeModal(loginModal);
+        openModal(forgotPasswordModal);
+    });
+
+    document.getElementById('backToLogin')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeModal(forgotPasswordModal);
+        openModal(loginModal);
+    });
+
     // Forms
     document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
     document.getElementById('registerInterestForm')?.addEventListener('submit', handleRegisterInterest);
+    document.getElementById('forgotPasswordForm')?.addEventListener('submit', handleForgotPassword);
+    document.getElementById('resetPasswordForm')?.addEventListener('submit', handleResetPassword);
     document.getElementById('profileForm')?.addEventListener('submit', handleProfileUpdate);
     document.getElementById('createDealForm')?.addEventListener('submit', handleCreateDeal);
 
@@ -169,6 +197,76 @@ async function handleRegisterInterest(e) {
             document.getElementById('registerInterestForm').reset();
         } else {
             alert(data.message || 'Failed to submit interest. Please try again.');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmail').value;
+
+    try {
+        const response = await fetch(`${API_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            closeModal(forgotPasswordModal);
+            alert(data.message || 'Password reset link has been sent to your email.');
+            document.getElementById('forgotPasswordForm').reset();
+        } else {
+            alert(data.message || 'Failed to send reset link. Please try again.');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const token = sessionStorage.getItem('resetToken');
+
+    if (!token) {
+        alert('Invalid or missing reset token. Please request a new password reset link.');
+        closeModal(resetPasswordModal);
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        alert('Passwords do not match. Please try again.');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        alert('Password must be at least 8 characters long.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, newPassword })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            closeModal(resetPasswordModal);
+            sessionStorage.removeItem('resetToken');
+            alert(data.message || 'Password reset successful! You can now login with your new password.');
+            document.getElementById('resetPasswordForm').reset();
+            openModal(loginModal);
+        } else {
+            alert(data.message || 'Failed to reset password. Please try again or request a new reset link.');
         }
     } catch (error) {
         alert('Error: ' + error.message);
