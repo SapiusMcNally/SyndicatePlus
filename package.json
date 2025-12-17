@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "postinstall": "prisma generate"
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && prisma migrate deploy"
   },
   "keywords": [
     "corporate finance",
@@ -26,11 +28,11 @@
     "express-rate-limit": "^8.2.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
+    "prisma": "^7.0.0",
     "resend": "^6.6.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "prisma": "^7.0.0"
+    "nodemon": "^3.0.1"
   }
 }
