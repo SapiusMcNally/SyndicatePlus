@@ -177,18 +177,24 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
+    console.log('Reset password request received');
+
     if (!token || !newPassword) {
+      console.log('Missing token or password');
       return res.status(400).json({ message: 'Token and new password are required' });
     }
 
     if (newPassword.length < 8) {
+      console.log('Password too short');
       return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
 
     // Hash the token to compare with database
+    console.log('Hashing token...');
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Find valid reset token
+    console.log('Looking up reset token in database...');
     const resetToken = await prisma.passwordResetToken.findFirst({
       where: {
         token: hashedToken,
@@ -203,14 +209,17 @@ router.post('/reset-password', async (req, res) => {
     });
 
     if (!resetToken) {
+      console.log('Invalid or expired token');
       return res.status(400).json({
         message: 'Invalid or expired password reset token'
       });
     }
 
+    console.log('Token valid, hashing new password...');
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
+    console.log('Updating database...');
     // Update password and mark token as used
     await prisma.$transaction([
       prisma.firm.update({
@@ -223,11 +232,13 @@ router.post('/reset-password', async (req, res) => {
       })
     ]);
 
+    console.log('Password reset successful');
     res.json({
       message: 'Password reset successful. You can now login with your new password.'
     });
   } catch (error) {
     console.error('Error in reset-password:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
