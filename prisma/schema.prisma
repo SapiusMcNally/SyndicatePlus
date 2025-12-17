@@ -26,6 +26,7 @@ model Firm {
   receivedInvitations Invitation[] @relation("InvitationReceiver")
   ndas                NDA[]
   enrichment          FirmEnrichment?
+  uploadedDocuments   Document[]
 }
 
 model Deal {
@@ -46,6 +47,7 @@ model Deal {
   firm        Firm         @relation(fields: [firmId], references: [id], onDelete: Cascade)
   invitations Invitation[]
   ndas        NDA[]
+  documents   Document[]
 }
 
 model Invitation {
@@ -109,4 +111,18 @@ model InterestRegistration {
   company   String
   message   String?
   createdAt DateTime @default(now())
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  dealId      String
+  fileName    String
+  fileUrl     String
+  fileSize    Int
+  fileType    String
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  uploader    Firm     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
 }

@@ -430,37 +430,148 @@ async function loadMyDeals() {
                 ${deal.syndicateMembers && deal.syndicateMembers.length > 0 ?
                     `<p class="mt-1"><strong>Syndicate Members:</strong> ${deal.syndicateMembers.length}</p>` : ''}
 
-                ${deal.dealLocker && (deal.dealLocker.investmentMemo || deal.dealLocker.pitchDeck || deal.dealLocker.additionalMaterials?.length > 0) ? `
                 <div class="deal-locker-section">
-                    <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-dark);"><i class="fas fa-lock"></i> Deal-Locker Materials</h4>
-                    <div class="deal-locker-files">
-                        ${deal.dealLocker.investmentMemo ? `
-                            <div class="deal-file">
-                                <i class="fas fa-file-pdf"></i>
-                                <span>Investment Memorandum: ${deal.dealLocker.investmentMemo}</span>
-                            </div>
-                        ` : ''}
-                        ${deal.dealLocker.pitchDeck ? `
-                            <div class="deal-file">
-                                <i class="fas fa-file-powerpoint"></i>
-                                <span>Pitch Deck: ${deal.dealLocker.pitchDeck}</span>
-                            </div>
-                        ` : ''}
-                        ${deal.dealLocker.additionalMaterials && deal.dealLocker.additionalMaterials.length > 0 ?
-                            deal.dealLocker.additionalMaterials.map(file => `
-                                <div class="deal-file">
-                                    <i class="fas fa-file"></i>
-                                    <span>Additional: ${file}</span>
-                                </div>
-                            `).join('') : ''}
+                    <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-dark);"><i class="fas fa-lock"></i> Deal-Locker</h4>
+                    <div id="documents-${deal.id}" class="deal-locker-files">
+                        <p style="color: #666;">Loading documents...</p>
+                    </div>
+                    <div class="deal-locker-upload" style="margin-top: 0.5rem;">
+                        <input type="file" id="fileInput-${deal.id}" style="display: none;" onchange="handleFileUpload('${deal.id}', this)">
+                        <button onclick="document.getElementById('fileInput-${deal.id}').click()" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            <i class="fas fa-upload"></i> Upload Document
+                        </button>
                     </div>
                 </div>
-                ` : ''}
             </div>
         `).join('');
+
+        // Load documents for each deal
+        deals.forEach(deal => {
+            loadDealDocuments(deal.id);
+        });
     } catch (error) {
         console.error('Error loading deals:', error);
     }
+}
+
+// Deal Locker Document Management
+async function loadDealDocuments(dealId) {
+    try {
+        const response = await fetch(`${API_URL}/documents/deal/${dealId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load documents');
+        }
+
+        const documents = await response.json();
+        const documentsContainer = document.getElementById(`documents-${dealId}`);
+
+        if (documents.length === 0) {
+            documentsContainer.innerHTML = '<p style="color: #999; font-size: 0.9rem;">No documents uploaded yet.</p>';
+            return;
+        }
+
+        documentsContainer.innerHTML = documents.map(doc => `
+            <div class="deal-file" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; margin-bottom: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-file"></i>
+                    <a href="${doc.fileUrl}" target="_blank" style="color: var(--primary-color); text-decoration: none;">
+                        ${doc.fileName}
+                    </a>
+                    <span style="color: #999; font-size: 0.85rem;">(${formatFileSize(doc.fileSize)})</span>
+                </div>
+                <button onclick="deleteDealDocument('${dealId}', '${doc.id}')" class="btn-icon" style="background: none; border: none; color: #dc3545; cursor: pointer; padding: 0.25rem 0.5rem;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        const documentsContainer = document.getElementById(`documents-${dealId}`);
+        if (documentsContainer) {
+            documentsContainer.innerHTML = '<p style="color: #dc3545; font-size: 0.9rem;">Error loading documents</p>';
+        }
+    }
+}
+
+async function handleFileUpload(dealId, inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+        alert('File size must be less than 50MB');
+        inputElement.value = '';
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_URL}/documents/upload/${dealId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Upload failed');
+        }
+
+        // Clear the input
+        inputElement.value = '';
+
+        // Reload documents
+        await loadDealDocuments(dealId);
+
+        alert('Document uploaded successfully!');
+    } catch (error) {
+        console.error('Error uploading document:', error);
+        alert('Error uploading document: ' + error.message);
+        inputElement.value = '';
+    }
+}
+
+async function deleteDealDocument(dealId, documentId) {
+    if (!confirm('Are you sure you want to delete this document?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/documents/${documentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Delete failed');
+        }
+
+        // Reload documents
+        await loadDealDocuments(dealId);
+
+        alert('Document deleted successfully!');
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('Error deleting document: ' + error.message);
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
 // Syndicate Building
