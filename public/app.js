@@ -158,7 +158,16 @@ async function handleLogin(e) {
             body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let data;
+
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            throw new Error(text || 'Server returned a non-JSON response');
+        }
 
         if (response.ok) {
             authToken = data.token;
@@ -172,6 +181,7 @@ async function handleLogin(e) {
             alert(data.message || 'Login failed');
         }
     } catch (error) {
+        console.error('Login error:', error);
         alert('Error: ' + error.message);
     }
 }
@@ -214,7 +224,16 @@ async function handleForgotPassword(e) {
             body: JSON.stringify({ email })
         });
 
-        const data = await response.json();
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let data;
+
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            throw new Error(text || 'Server returned a non-JSON response');
+        }
 
         if (response.ok) {
             closeModal(forgotPasswordModal);
@@ -224,6 +243,7 @@ async function handleForgotPassword(e) {
             alert(data.message || 'Failed to send reset link. Please try again.');
         }
     } catch (error) {
+        console.error('Forgot password error:', error);
         alert('Error: ' + error.message);
     }
 }
@@ -257,7 +277,17 @@ async function handleResetPassword(e) {
             body: JSON.stringify({ token, newPassword })
         });
 
-        const data = await response.json();
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let data;
+
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            // If not JSON, get text for error message
+            const text = await response.text();
+            throw new Error(text || 'Server returned a non-JSON response');
+        }
 
         if (response.ok) {
             closeModal(resetPasswordModal);
@@ -269,6 +299,7 @@ async function handleResetPassword(e) {
             alert(data.message || 'Failed to reset password. Please try again or request a new reset link.');
         }
     } catch (error) {
+        console.error('Reset password error:', error);
         alert('Error: ' + error.message);
     }
 }
