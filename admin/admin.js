@@ -122,6 +122,9 @@ function showDashboard() {
   if (adminInfo) {
     document.getElementById('adminName').textContent = adminInfo.firmName || adminInfo.email;
   }
+
+  // Initialize setup checklist
+  initSetupChecklist();
 }
 
 // View Switching
@@ -560,4 +563,96 @@ function showError(message) {
 
 function showSuccess(message) {
   alert('Success: ' + message);
+}
+
+// Setup Checklist Functions
+function initSetupChecklist() {
+  // Load checklist state from localStorage
+  const checklistState = JSON.parse(localStorage.getItem('setupChecklistState') || '{}');
+
+  // Initialize checkboxes
+  const checkboxes = document.querySelectorAll('.checklist-checkbox');
+  checkboxes.forEach(checkbox => {
+    const itemId = checkbox.id.replace('check-', '');
+    if (checklistState[itemId]) {
+      checkbox.checked = true;
+      const item = checkbox.closest('.checklist-item');
+      if (item) item.classList.add('completed');
+    }
+
+    checkbox.addEventListener('change', handleChecklistChange);
+  });
+
+  updateChecklistProgress();
+}
+
+function handleChecklistChange(e) {
+  const checkbox = e.target;
+  const itemId = checkbox.id.replace('check-', '');
+  const item = checkbox.closest('.checklist-item');
+
+  // Update UI
+  if (checkbox.checked) {
+    item?.classList.add('completed');
+  } else {
+    item?.classList.remove('completed');
+  }
+
+  // Save state
+  const checklistState = JSON.parse(localStorage.getItem('setupChecklistState') || '{}');
+  checklistState[itemId] = checkbox.checked;
+  localStorage.setItem('setupChecklistState', JSON.stringify(checklistState));
+
+  updateChecklistProgress();
+}
+
+function updateChecklistProgress() {
+  const checkboxes = document.querySelectorAll('.checklist-checkbox');
+  const total = checkboxes.length;
+  const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+  const progressEl = document.getElementById('checklistProgress');
+  if (progressEl) {
+    progressEl.textContent = `${completed} of ${total} complete`;
+  }
+}
+
+function showResendInstructions() {
+  const instructions = `
+How to Verify Your Domain in Resend:
+
+1. Go to https://resend.com/domains and click "Add Domain"
+
+2. Enter your domain: sapius.co.uk
+
+3. Resend will provide DNS records. You'll need to add these to your domain provider:
+   • TXT record for domain verification
+   • DKIM records for email authentication
+   • MX records (optional) for bounce handling
+
+4. Add the DNS records to your domain registrar (e.g., GoDaddy, Namecheap, Cloudflare)
+
+5. Wait for DNS propagation (can take up to 48 hours, usually much faster)
+
+6. Click "Verify" in Resend
+
+7. Once verified, update your environment variables:
+   - .env.local: FROM_EMAIL=noreply@sapius.co.uk
+   - Vercel: Add same variable in project settings
+
+Benefits:
+✓ Send password reset emails to all users
+✓ Better email deliverability
+✓ Professional sender address
+  `.trim();
+
+  alert(instructions);
+}
+
+function markAsOptional(itemId) {
+  const checkbox = document.getElementById(`check-${itemId}`);
+  if (checkbox && confirm('Mark this item as complete (you can skip this for now)?')) {
+    checkbox.checked = true;
+    handleChecklistChange({ target: checkbox });
+  }
 }
