@@ -41,6 +41,16 @@ function setupEventListeners() {
   // Enrichment
   document.getElementById('refreshEnrichmentBtn')?.addEventListener('click', loadEnrichment);
   document.getElementById('triggerBulkEnrichmentBtn')?.addEventListener('click', triggerBulkEnrichment);
+
+  // CF Monitor
+  document.getElementById('refreshCFMonitorBtn')?.addEventListener('click', loadCFMonitor);
+  document.getElementById('cfMonitorSearch')?.addEventListener('input', debounce(loadCFMonitor, 500));
+  document.getElementById('cfMonitorCountryFilter')?.addEventListener('change', loadCFMonitor);
+  document.getElementById('cfMonitorTypeFilter')?.addEventListener('change', loadCFMonitor);
+  document.getElementById('cfMonitorFreshnessFilter')?.addEventListener('change', loadCFMonitor);
+  document.getElementById('addMonitoredFirmBtn')?.addEventListener('click', openAddFirmModal);
+  document.getElementById('discoverFirmsBtn')?.addEventListener('click', triggerFirmDiscovery);
+  document.getElementById('addFirmForm')?.addEventListener('submit', handleAddFirm);
 }
 
 // Authentication
@@ -152,6 +162,9 @@ function switchView(viewName) {
       break;
     case 'enrichment':
       loadEnrichment();
+      break;
+    case 'cf-monitor':
+      loadCFMonitor();
       break;
   }
 }
@@ -552,6 +565,181 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+// CF Monitor Functions
+let currentCFMonitorPage = 1;
+
+async function loadCFMonitor(page = 1) {
+  currentCFMonitorPage = page;
+  const search = document.getElementById('cfMonitorSearch')?.value || '';
+  const country = document.getElementById('cfMonitorCountryFilter')?.value || 'all';
+  const firmType = document.getElementById('cfMonitorTypeFilter')?.value || 'all';
+  const freshness = document.getElementById('cfMonitorFreshnessFilter')?.value || 'all';
+
+  try {
+    const [firms, stats] = await Promise.all([
+      apiCall(`/admin/cf-monitor?page=${page}&limit=20&search=${encodeURIComponent(search)}&country=${country}&firmType=${firmType}&freshness=${freshness}`).then(r => r.json()),
+      apiCall('/admin/cf-monitor/stats').then(r => r.json())
+    ]);
+
+    // Update stats
+    document.getElementById('cfMonitorTotalFirms').textContent = stats.total;
+    document.getElementById('cfMonitorUKFirms').textContent = stats.byCountry.UK || 0;
+    document.getElementById('cfMonitorSwissFirms').textContent = stats.byCountry.Switzerland || 0;
+    document.getElementById('cfMonitorFreshData').textContent = stats.freshDataCount;
+    document.getElementById('cfMonitorRecentDeals').textContent = stats.recentDealsCount;
+
+    // Update table
+    const tbody = document.getElementById('cfMonitorTableBody');
+    tbody.innerHTML = '';
+
+    if (firms.firms.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="loading">No monitored firms found</td></tr>';
+      return;
+    }
+
+    firms.firms.forEach(firm => {
+      const freshness = getFreshnessScore(firm.lastDataUpdate);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>
+          <strong>${escapeHtml(firm.firmName)}</strong>
+          ${firm.website ? `<br><small><a href="${escapeHtml(firm.website)}" target="_blank">${escapeHtml(firm.website)}</a></small>` : ''}
+        </td>
+        <td><span class="badge badge-info">${firm.country}</span></td>
+        <td>${firm.firmType || '-'}</td>
+        <td>${firm._count.deals || 0} deals</td>
+        <td>
+          ${firm.latestNews ?
+            `<small>${escapeHtml(firm.latestNews.headline.substring(0, 50))}...</small>` :
+            '-'
+          }
+        </td>
+        <td>${firm.lastDataUpdate ? formatDate(firm.lastDataUpdate) : 'Never'}</td>
+        <td><span class="badge badge-${freshness.color}">${freshness.label}</span></td>
+        <td>
+          <button class="btn btn-small btn-primary" onclick="viewMonitoredFirm('${firm.id}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+          <button class="btn btn-small btn-secondary" onclick="refreshMonitoredFirm('${firm.id}')">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    renderPagination('cfMonitorPagination', firms.pagination, loadCFMonitor);
+  } catch (error) {
+    console.error('Error loading CF monitor:', error);
+    showError('Failed to load monitored firms');
+  }
+}
+
+function getFreshnessScore(lastUpdate) {
+  if (!lastUpdate) return { label: 'No Data', color: 'danger' };
+
+  const hoursSince = (Date.now() - new Date(lastUpdate).getTime()) / (1000 * 60 * 60);
+
+  if (hoursSince < 24) return { label: 'Fresh', color: 'success' };
+  if (hoursSince < 168) return { label: 'Recent', color: 'warning' };
+  return { label: 'Stale', color: 'danger' };
+}
+
+async function viewMonitoredFirm(firmId) {
+  try {
+    const response = await apiCall(`/admin/cf-monitor/${firmId}`);
+    const firm = await response.json();
+
+    alert(`Monitored Firm Details:\n\n${firm.firmName}\nCountry: ${firm.country}\nType: ${firm.firmType || 'N/A'}\n\nDeals: ${firm._count.deals}\nNews Articles: ${firm._count.news}\nKey Personnel: ${firm._count.personnel}\n\nLast Updated: ${firm.lastDataUpdate ? new Date(firm.lastDataUpdate).toLocaleString() : 'Never'}`);
+  } catch (error) {
+    showError('Failed to load firm details');
+  }
+}
+
+async function refreshMonitoredFirm(firmId) {
+  try {
+    const response = await apiCall(`/admin/cf-monitor/refresh/${firmId}`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      showSuccess('Refresh job queued');
+      setTimeout(() => loadCFMonitor(currentCFMonitorPage), 1000);
+    } else {
+      throw new Error('Failed to trigger refresh');
+    }
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+function openAddFirmModal() {
+  document.getElementById('addFirmModal').style.display = 'flex';
+}
+
+function closeAddFirmModal() {
+  document.getElementById('addFirmModal').style.display = 'none';
+  document.getElementById('addFirmForm').reset();
+}
+
+async function handleAddFirm(e) {
+  e.preventDefault();
+
+  const formData = {
+    firmName: document.getElementById('firmName').value,
+    country: document.getElementById('firmCountry').value,
+    firmType: document.getElementById('firmType').value || null,
+    registrationNumber: document.getElementById('registrationNumber').value || null,
+    website: document.getElementById('firmWebsite').value || null,
+    discoverySource: 'manual'
+  };
+
+  try {
+    const response = await apiCall('/admin/cf-monitor', {
+      method: 'POST',
+      body: JSON.stringify(formData)
+    });
+
+    if (response.ok) {
+      showSuccess('Firm added and monitoring started');
+      closeAddFirmModal();
+      loadCFMonitor(1);
+    } else {
+      throw new Error('Failed to add firm');
+    }
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+async function triggerFirmDiscovery() {
+  if (!confirm('This will scan Companies House and Swiss Commercial Registry for new corporate finance firms. Continue?')) return;
+
+  const btn = document.getElementById('discoverFirmsBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Discovering...';
+
+  try {
+    const response = await apiCall('/admin/cf-monitor/discover', {
+      method: 'POST'
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showSuccess(`Discovery job created. Found ${data.discovered || 0} potential new firms.`);
+      setTimeout(() => loadCFMonitor(1), 2000);
+    } else {
+      throw new Error(data.error || 'Discovery failed');
+    }
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-search"></i> Auto-Discover';
+  }
 }
 
 function showError(message) {

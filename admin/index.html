@@ -65,6 +65,9 @@
       <button class="nav-btn" data-view="enrichment">
         <i class="fas fa-database"></i> Enrichment
       </button>
+      <button class="nav-btn" data-view="cf-monitor">
+        <i class="fas fa-briefcase"></i> CF Monitor
+      </button>
     </nav>
 
     <!-- Main Content -->
@@ -269,7 +272,132 @@
 
         <div id="enrichmentPagination" class="pagination"></div>
       </div>
+
+      <!-- CF Monitor View -->
+      <div id="cfMonitorView" class="view">
+        <div class="view-header">
+          <h2>Corporate Finance Monitor</h2>
+          <div class="view-actions">
+            <input type="text" id="cfMonitorSearch" placeholder="Search firms..." class="search-input">
+            <select id="cfMonitorCountryFilter" class="select-input">
+              <option value="all">All Countries</option>
+              <option value="UK">UK</option>
+              <option value="Switzerland">Switzerland</option>
+            </select>
+            <select id="cfMonitorTypeFilter" class="select-input">
+              <option value="all">All Types</option>
+              <option value="boutique">Boutique</option>
+              <option value="mid-market">Mid-Market</option>
+              <option value="large">Large</option>
+            </select>
+            <select id="cfMonitorFreshnessFilter" class="select-input">
+              <option value="all">All Data Ages</option>
+              <option value="fresh">Fresh (&lt;24h)</option>
+              <option value="stale">Stale (&gt;24h)</option>
+              <option value="old">Old (&gt;7d)</option>
+            </select>
+            <button id="addMonitoredFirmBtn" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Add Firm
+            </button>
+            <button id="discoverFirmsBtn" class="btn btn-secondary">
+              <i class="fas fa-search"></i> Auto-Discover
+            </button>
+            <button id="refreshCFMonitorBtn" class="btn btn-secondary">
+              <i class="fas fa-sync"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="cf-monitor-stats">
+          <div class="stat-badge">
+            <strong id="cfMonitorTotalFirms">-</strong>
+            <span>Total Firms</span>
+          </div>
+          <div class="stat-badge">
+            <strong id="cfMonitorUKFirms">-</strong>
+            <span>UK</span>
+          </div>
+          <div class="stat-badge">
+            <strong id="cfMonitorSwissFirms">-</strong>
+            <span>Switzerland</span>
+          </div>
+          <div class="stat-badge">
+            <strong id="cfMonitorFreshData">-</strong>
+            <span>Fresh Data</span>
+          </div>
+          <div class="stat-badge">
+            <strong id="cfMonitorRecentDeals">-</strong>
+            <span>Deals (30d)</span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Firm Name</th>
+                <th>Country</th>
+                <th>Type</th>
+                <th>Recent Deals</th>
+                <th>Latest News</th>
+                <th>Last Updated</th>
+                <th>Freshness</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cfMonitorTableBody">
+              <tr>
+                <td colspan="8" class="loading">Loading monitored firms...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="cfMonitorPagination" class="pagination"></div>
+      </div>
     </main>
+  </div>
+
+  <!-- Add Firm Modal -->
+  <div id="addFirmModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>Add Monitored Firm</h3>
+      <form id="addFirmForm">
+        <div class="form-group">
+          <label for="firmName">Firm Name *</label>
+          <input type="text" id="firmName" required>
+        </div>
+        <div class="form-group">
+          <label for="firmCountry">Country *</label>
+          <select id="firmCountry" required>
+            <option value="">Select...</option>
+            <option value="UK">United Kingdom</option>
+            <option value="Switzerland">Switzerland</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="firmType">Firm Type</label>
+          <select id="firmType">
+            <option value="">Select...</option>
+            <option value="boutique">Boutique</option>
+            <option value="mid-market">Mid-Market</option>
+            <option value="large">Large</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="registrationNumber">Registration Number</label>
+          <input type="text" id="registrationNumber" placeholder="Companies House or CHE number">
+        </div>
+        <div class="form-group">
+          <label for="firmWebsite">Website</label>
+          <input type="url" id="firmWebsite" placeholder="https://...">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeAddFirmModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add & Start Monitoring</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="/admin/admin.js"></script>

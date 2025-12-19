@@ -51,6 +51,11 @@ const documentRoutes = require('./routes/documents');
 const adminMembersRoutes = require('./routes/admin/members');
 const adminAnalyticsRoutes = require('./routes/admin/analytics');
 const adminEnrichmentRoutes = require('./routes/admin/enrichment');
+const adminCFMonitorRoutes = require('./routes/admin/cf-monitor');
+const adminCFEnrichmentWorkerRoutes = require('./routes/admin/cf-enrichment-worker');
+
+// Import cron routes
+const cfMonitorCronRoutes = require('./routes/api/cron/cf-monitor');
 
 // Use routes with rate limiting
 app.use('/api/auth', authLimiter, authRoutes);
@@ -65,6 +70,11 @@ app.use('/api/documents', apiLimiter, documentRoutes);
 app.use('/api/admin/members', apiLimiter, adminMembersRoutes);
 app.use('/api/admin/analytics', apiLimiter, adminAnalyticsRoutes);
 app.use('/api/admin/enrichment', apiLimiter, adminEnrichmentRoutes);
+app.use('/api/admin/cf-monitor', apiLimiter, adminCFMonitorRoutes);
+app.use('/api/admin/cf-enrichment-worker', adminCFEnrichmentWorkerRoutes); // Has its own auth middleware
+
+// Cron routes (NO rate limiting - protected by CRON_SECRET)
+app.use('/api/cron/cf-monitor', cfMonitorCronRoutes);
 
 // Serve admin static files
 app.use('/admin', express.static('admin'));
