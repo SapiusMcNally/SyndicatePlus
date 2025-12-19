@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
   // Login
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
-  document.getElementById('logoutBtn').addEventListener('logout', handleLogout);
+  document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
 
   // Navigation
   document.querySelectorAll('.nav-btn').forEach(btn => {
