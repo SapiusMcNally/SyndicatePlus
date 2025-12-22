@@ -1,0 +1,309 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Firm {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firmName  String
+  profile   Json?
+  isAdmin   Boolean  @default(false)
+  role      String   @default("user")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  deals               Deal[]
+  sentInvitations     Invitation[] @relation("InvitationSender")
+  receivedInvitations Invitation[] @relation("InvitationReceiver")
+  ndas                NDA[]
+  enrichment          FirmEnrichment?
+  uploadedDocuments   Document[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Deal {
+  id                    String   @id @default(uuid())
+  firmId                String
+  dealName              String
+  targetAmount          Float
+  sector                String
+  jurisdiction          String
+  dealType              String
+  description           String?
+  targetInvestorProfile String?
+  status                String   @default("draft")
+  invitedFirms          String[] @default([])
+  syndicateMembers      String[] @default([])
+  createdAt             DateTime @default(now())
+
+  firm        Firm         @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  invitations Invitation[]
+  ndas        NDA[]
+  documents   Document[]
+}
+
+model Invitation {
+  id          String   @id @default(uuid())
+  dealId      String
+  fromFirmId  String
+  toFirmId    String
+  status      String   @default("pending")
+  message     String?
+  createdAt   DateTime @default(now())
+  respondedAt DateTime?
+
+  deal     Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  fromFirm Firm @relation("InvitationSender", fields: [fromFirmId], references: [id], onDelete: Cascade)
+  toFirm   Firm @relation("InvitationReceiver", fields: [toFirmId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, toFirmId])
+}
+
+model NDA {
+  id        String   @id @default(uuid())
+  dealId    String
+  firmId    String
+  signedAt  DateTime @default(now())
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, firmId])
+}
+
+model FirmEnrichment {
+  id                String    @id @default(uuid())
+  firmId            String    @unique
+  enrichmentStatus  String    @default("pending")
+  lastEnriched      DateTime?
+  enrichmentData    Json?
+  errorMessage      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  firm Firm @relation(fields: [firmId], references: [id], onDelete: Cascade)
+}
+
+model AgentJob {
+  id              String    @id @default(uuid())
+  jobType         String
+  status          String    @default("queued")
+  payload         Json
+  result          Json?
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+
+  // Optional relation to MonitoredFirm (for CF monitoring jobs)
+  monitoredFirmId String?
+  monitoredFirm   MonitoredFirm? @relation("MonitoredFirmJobs", fields: [monitoredFirmId], references: [id], onDelete: SetNull)
+
+  @@index([jobType])
+  @@index([status])
+  @@index([monitoredFirmId])
+}
+
+model InterestRegistration {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String
+  message   String?
+  createdAt DateTime @default(now())
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  dealId      String
+  fileName    String
+  fileUrl     String
+  fileSize    Int
+  fileType    String
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  uploader    Firm     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  firmId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  firm      Firm     @relation(fields: [firmId], references: [id], onDelete: Cascade)
+}
+
+// Corporate Finance Monitoring Models
+
+model MonitoredFirm {
+  id                String   @id @default(uuid())
+  firmName          String
+  country           String   // 'UK' or 'Switzerland'
+  firmType          String?  // 'boutique', 'mid-market', 'large'
+  registrationNumber String? // Companies House or Swiss Commercial Registry number
+  website           String?
+  headquarters      String?  // City/location
+  geographicFocus   String[] @default([]) // Regions they operate in
+  sectorFocus       String[] @default([]) // Sectors they specialize in
+
+  // Discovery metadata
+  discoverySource   String?  // 'companies_house', 'swiss_registry', 'manual', 'web_scraping'
+  discoveredAt      DateTime @default(now())
+
+  // Monitoring control
+  isActive          Boolean  @default(true)
+  monitoringStatus  String   @default("active") // 'active', 'paused', 'archived'
+
+  // Data freshness tracking
+  lastDataUpdate    DateTime?
+  dataFreshnessScore Int     @default(0) // 0-100 score based on data age
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  firmDataSnapshots FirmData[]
+  deals             DealActivity[]
+  news              NewsArticle[]
+  personnel         Personnel[]
+  enrichmentJobs    AgentJob[]   @relation("MonitoredFirmJobs")
+
+  @@index([country])
+  @@index([firmType])
+  @@index([monitoringStatus])
+  @@index([lastDataUpdate])
+}
+
+model FirmData {
+  id                String   @id @default(uuid())
+  monitoredFirmId   String
+
+  // Registry data (Companies House or Swiss Registry)
+  registryData      Json?    // Raw data from official registry
+  companyStatus     String?  // 'active', 'dissolved', etc.
+  incorporationDate DateTime?
+  directors         Json?    // Array of director information
+  financials        Json?    // Latest filed accounts
+  sicCodes          String[] @default([]) // SIC industry codes
+
+  // Derived/enriched data
+  employeeCount     Int?
+  revenue           Float?
+  revenueYear       Int?
+
+  // Versioning
+  snapshotDate      DateTime @default(now())
+  dataSource        String   // 'companies_house', 'swiss_registry', 'web'
+
+  createdAt         DateTime @default(now())
+
+  monitoredFirm     MonitoredFirm @relation(fields: [monitoredFirmId], references: [id], onDelete: Cascade)
+
+  @@index([monitoredFirmId])
+  @@index([snapshotDate])
+}
+
+model DealActivity {
+  id                String   @id @default(uuid())
+  monitoredFirmId   String
+
+  dealName          String
+  dealType          String   // 'M&A', 'Fundraising', 'IPO', 'Debt', 'Advisory'
+  role              String?  // 'lead', 'co-lead', 'advisor'
+  sector            String?
+  targetCompany     String?
+  dealSize          Float?   // Deal value in GBP
+  dealSizeCurrency  String   @default("GBP")
+
+  announcementDate  DateTime?
+  completionDate    DateTime?
+
+  description       String?
+  sourceUrl         String?
+  dataSource        String   // 'press_release', 'news_api', 'linkedin', 'web_scraping'
+
+  rawData           Json?    // Original scraped/API data
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  monitoredFirm     MonitoredFirm @relation(fields: [monitoredFirmId], references: [id], onDelete: Cascade)
+
+  @@index([monitoredFirmId])
+  @@index([announcementDate])
+  @@index([sector])
+  @@index([dealType])
+}
+
+model NewsArticle {
+  id                String   @id @default(uuid())
+  monitoredFirmId   String
+
+  headline          String
+  summary           String?
+  content           String?  // Full article text if available
+
+  publishedAt       DateTime
+  sourceUrl         String
+  sourceName        String   // 'Financial Times', 'Bloomberg', etc.
+
+  category          String?  // 'deal_announcement', 'hire', 'award', 'market_commentary'
+  sentiment         String?  // 'positive', 'neutral', 'negative'
+
+  dataSource        String   // 'news_api', 'rss_feed', 'web_scraping'
+  rawData           Json?
+
+  createdAt         DateTime @default(now())
+
+  monitoredFirm     MonitoredFirm @relation(fields: [monitoredFirmId], references: [id], onDelete: Cascade)
+
+  @@index([monitoredFirmId])
+  @@index([publishedAt])
+  @@index([category])
+  @@unique([monitoredFirmId, sourceUrl]) // Prevent duplicate articles
+}
+
+model Personnel {
+  id                String   @id @default(uuid())
+  monitoredFirmId   String
+
+  fullName          String
+  position          String   // 'Managing Director', 'Partner', 'CEO', etc.
+  department        String?  // 'M&A', 'Debt Advisory', etc.
+
+  linkedinUrl       String?
+  email             String?
+  phone             String?
+
+  bio               String?
+  photoUrl          String?
+
+  startDate         DateTime?
+  endDate           DateTime? // If they've left the firm
+  isCurrent         Boolean  @default(true)
+
+  dataSource        String   // 'linkedin', 'companies_house', 'website'
+  rawData           Json?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  monitoredFirm     MonitoredFirm @relation(fields: [monitoredFirmId], references: [id], onDelete: Cascade)
+
+  @@index([monitoredFirmId])
+  @@index([isCurrent])
+}
